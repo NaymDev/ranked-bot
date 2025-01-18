@@ -11,7 +11,9 @@ const queues = new Map<string, Map<string, QueueParticipant>>()
 Queue.cache.on("add", (queue) => queues.set(queue.id, new Map()))
 Queue.cache.on("delete", (queue) => queues.delete(queue.id))
 
-export function addToQueue(queue: Queue, participant: QueueParticipant) {
+export function addToQueue(queue: Queue, user_id: string) {
+
+    let participant = new SoloParticipant(user_id)
 
     for (const user of participant.getAllPlayerIds()) {
         const member = client.guilds.cache.get(queue.guildId)?.members.cache.get(user);
@@ -43,9 +45,7 @@ export function getQueueCount(queue: Queue) {
 }
 
 export function removeFromQueue(user: string) {
-    console.log("User: " + user)
     const queueId = playerQueues.get(user)
-    console.log("QueueID: " + queueId)
     if (queueId !== undefined) {
         queues.get(queueId)!.delete(user)
         playerQueues.delete(user)
@@ -68,7 +68,7 @@ function loadQueueMembers() {
         const channel = client.guilds.cache.get(queue.guildId)?.channels.cache.get(queue.id)
         if (channel?.isVoiceBased()) {
             for (const member of channel.members.values()) {
-                addToQueue(queue, new SoloParticipant(member.id))
+                addToQueue(queue, member.id)
             }
         }
     }
@@ -86,7 +86,7 @@ client.on("voiceStateUpdate", async (oldState, newState) => {
     }
 
     if (newQueue) {
-        addToQueue(newQueue, new SoloParticipant(newState.id))
+        addToQueue(newQueue, newState.id)
     }
 })
 

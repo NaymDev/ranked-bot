@@ -8,8 +8,6 @@ export function pollQueue(queue: Queue, participants: QueueParticipant[]) {
     if (participants.reduce((sum, team) => sum + team.getAllPlayerIds().length, 0) < 2) return 0
 
     participants.sort((a, b) => a.getElo() - b.getElo())
-    console.log(participants)
-    return
 
     let games = 0
     for (let i = 0; i < participants.length-1; i++) {

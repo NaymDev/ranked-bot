@@ -10,6 +10,7 @@ import {
 import { Queue } from "@/database"
 import { UserError } from "@/lib/discord/UserError"
 import { addToQueue, removeFromQueue } from "@/lib/queue"
+import { SoloParticipant } from "@/lib/queue/participant"
 
 export default {
     builder: new SlashCommandBuilder()
