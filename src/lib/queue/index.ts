@@ -4,29 +4,36 @@ import { updateStatus } from "@/workers/functions/updateStatus"
 import { onCooldown } from "./cooldown"
 import { pollQueue } from "./polling"
 import { resetNick, setTempNick } from "./tempNicks"
+import { QueueParticipant, SoloParticipant } from "./participant"
 
 const playerQueues = new Map<string, string>()
-const queues = new Map<string, Map<string, number>>()
+const queues = new Map<string, Map<string, QueueParticipant>>()
 Queue.cache.on("add", (queue) => queues.set(queue.id, new Map()))
 Queue.cache.on("delete", (queue) => queues.delete(queue.id))
 
-export function addToQueue(queue: Queue, user: string) {
-    const member = client.guilds.cache.get(queue.guildId)?.members.cache.get(user)
+export function addToQueue(queue: Queue, participant: QueueParticipant) {
 
-    if (client.users.cache.get(user)?.bot) return 1
-    if (onCooldown(user)) return 2
-    if (!Player.getMcUuid(user)) {
-        if (member?.voice.channelId === queue.id) setTempNick(queue, user, "USE /REGISTER")
-        return 3
-    }
+    participant.getAllPlayerIds().forEach((user) => {
+        const member = client.guilds.cache.get(queue.guildId)?.members.cache.get(user)
 
-    resetNick(queue, user)
-    removeFromQueue(user)
-    playerQueues.set(user, queue.id)
+        if (client.users.cache.get(user)?.bot) return 1
+        if (onCooldown(user)) return 2
+        if (!Player.getMcUuid(user)) {
+            if (member?.voice.channelId === queue.id) setTempNick(queue, user, "USE /REGISTER")
+            return 3
+        }
+
+        resetNick(queue, user)
+        
+        playerQueues.set(user, queue.id)
+    });
+    
+    removeFromQueue(participant.getID())
+    
 
     const players = queues.get(queue.id)!
-    if (!players.has(user)) {
-        players.set(user, 0)
+    if (!players.has(participant.getID())) {
+        players.set(participant.getID(), participant)
         updateStatus(queue).catch(console.error)
         return 0
     }
@@ -60,7 +67,7 @@ function loadQueueMembers() {
         const channel = client.guilds.cache.get(queue.guildId)?.channels.cache.get(queue.id)
         if (channel?.isVoiceBased()) {
             for (const member of channel.members.values()) {
-                addToQueue(queue, member.id)
+                addToQueue(queue, new SoloParticipant(member.id))
             }
         }
     }
@@ -78,13 +85,13 @@ client.on("voiceStateUpdate", async (oldState, newState) => {
     }
 
     if (newQueue) {
-        addToQueue(newQueue, newState.id)
+        addToQueue(newQueue, new SoloParticipant(newState.id))
     }
 })
 
 setInterval(() => {
     for (const queue of Queue.cache.values()) {
-        if (pollQueue(queue, queues.get(queue.id)!) > 0) {
+        if (pollQueue(queue, [...queues.get(queue.id)!.values()]) > 0) {
             updateStatus(queue).catch(console.error)
         }
     }
