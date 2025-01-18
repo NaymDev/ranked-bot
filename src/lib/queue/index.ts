@@ -13,20 +13,19 @@ Queue.cache.on("delete", (queue) => queues.delete(queue.id))
 
 export function addToQueue(queue: Queue, participant: QueueParticipant) {
 
-    participant.getAllPlayerIds().forEach((user) => {
-        const member = client.guilds.cache.get(queue.guildId)?.members.cache.get(user)
+    for (const user of participant.getAllPlayerIds()) {
+        const member = client.guilds.cache.get(queue.guildId)?.members.cache.get(user);
 
-        if (client.users.cache.get(user)?.bot) return 1
-        if (onCooldown(user)) return 2
+        if (client.users.cache.get(user)?.bot) return 1;
+        if (onCooldown(user)) return 2;
         if (!Player.getMcUuid(user)) {
-            if (member?.voice.channelId === queue.id) setTempNick(queue, user, "USE /REGISTER")
-            return 3
+            if (member?.voice.channelId === queue.id) setTempNick(queue, user, "USE /REGISTER");
+            return 3;
         }
 
-        resetNick(queue, user)
-        
-        playerQueues.set(user, queue.id)
-    });
+        resetNick(queue, user);
+        playerQueues.set(user, queue.id);
+    }
     
     removeFromQueue(participant.getID())
     
@@ -44,7 +43,9 @@ export function getQueueCount(queue: Queue) {
 }
 
 export function removeFromQueue(user: string) {
+    console.log("User: " + user)
     const queueId = playerQueues.get(user)
+    console.log("QueueID: " + queueId)
     if (queueId !== undefined) {
         queues.get(queueId)!.delete(user)
         playerQueues.delete(user)
@@ -53,7 +54,7 @@ export function removeFromQueue(user: string) {
         updateStatus(queue!).catch(console.error)
         return queueId
     }
-
+    
     return undefined
 }
 
@@ -71,7 +72,7 @@ function loadQueueMembers() {
             }
         }
     }
-}
+} 
 
 client.on("voiceStateUpdate", async (oldState, newState) => {
     if (oldState.channelId === newState.channelId) return
