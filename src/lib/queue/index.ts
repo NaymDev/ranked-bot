@@ -27,10 +27,9 @@ export function addToQueue(queue: Queue, user_id: string) {
 
         resetNick(queue, user);
         playerQueues.set(user, queue.id);
+
+        removeUserFromQueue(user)
     }
-    
-    removeFromQueue(participant.getID())
-    
 
     const players = queues.get(queue.id)!
     if (!players.has(participant.getID())) {
@@ -44,7 +43,7 @@ export function getQueueCount(queue: Queue) {
     return queues.get(queue.id)?.size ?? 0
 }
 
-export function removeFromQueue(user: string) {
+export function removeUserFromQueue(user: string) {
     const queueId = playerQueues.get(user)
     if (queueId !== undefined) {
         queues.get(queueId)!.delete(user)
@@ -81,7 +80,7 @@ client.on("voiceStateUpdate", async (oldState, newState) => {
     const newQueue = newState.channelId && Queue.cache.get(newState.channelId)
 
     if (oldQueue) {
-        removeFromQueue(newState.id)
+        removeUserFromQueue(newState.id)
         resetNick(oldQueue, newState.id)
     }
 

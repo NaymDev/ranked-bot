@@ -9,7 +9,7 @@ import {
 
 import { Queue } from "@/database"
 import { UserError } from "@/lib/discord/UserError"
-import { addToQueue, removeFromQueue } from "@/lib/queue"
+import { addToQueue, removeUserFromQueue } from "@/lib/queue"
 import { SoloParticipant } from "@/lib/queue/participant"
 
 export default {
@@ -28,7 +28,7 @@ export default {
     async execute(interaction: ChatInputCommandInteraction) {
         await interaction.deferReply({ ephemeral: true })
 
-        const oldQueue = removeFromQueue(interaction.user.id)
+        const oldQueue = removeUserFromQueue(interaction.user.id)
         if (oldQueue) return `Successfully removed you from ${channelLink(oldQueue, interaction.guildId!)}`
 
         const channel = interaction.options.getChannel("channel") as BaseGuildVoiceChannel

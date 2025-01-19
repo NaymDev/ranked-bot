@@ -1,5 +1,5 @@
 import { Queue } from "@/database"
-import { removeFromQueue } from "."
+import { removeUserFromQueue } from "."
 import { startGame } from "../game/startGame"
 import { addCooldown } from "./cooldown"
 import { QueueParticipant } from "./participant"
@@ -20,7 +20,7 @@ export function pollQueue(queue: Queue, participants: QueueParticipant[]) {
         }
 
         for (const v of [entry, match]) {
-            removeFromQueue(v.getID())
+            v.getAllPlayerIds().forEach(removeUserFromQueue)
             addCooldown(v.getID())
         }
 
